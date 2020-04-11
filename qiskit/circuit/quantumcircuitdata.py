@@ -15,21 +15,18 @@
 """A wrapper class for the purposes of validating modifications to
 QuantumCircuit.data while maintaining the interface of a python list."""
 
-from collections.abc import MutableSequence
-
 from qiskit.circuit.exceptions import CircuitError
 from qiskit.circuit.instruction import Instruction
+from qiskit.circuit.componentdata import ComponentData
 
 
-class QuantumCircuitData(MutableSequence):
+class QuantumCircuitData(ComponentData):
     """A wrapper class for the purposes of validating modifications to
     QuantumCircuit.data while maintaining the interface of a python list."""
 
     def __init__(self, circuit):
-        self._circuit = circuit
-
-    def __getitem__(self, i):
-        return self._circuit._data[i]
+        super().__init__(circuit, '_data')
+        self._circuit = self._component
 
     def __setitem__(self, key, value):
         instruction, qargs, cargs = value
@@ -62,54 +59,3 @@ class QuantumCircuitData(MutableSequence):
         self._circuit._data[key] = (instruction, qargs, cargs)
 
         self._circuit._update_parameter_table(instruction)
-
-    def insert(self, index, value):
-        self._circuit._data.insert(index, None)
-        self[index] = value
-
-    def __delitem__(self, i):
-        del self._circuit._data[i]
-
-    def __len__(self):
-        return len(self._circuit._data)
-
-    def __cast(self, other):
-        return other._circuit._data if isinstance(other, QuantumCircuitData) else other
-
-    def __repr__(self):
-        return repr(self._circuit._data)
-
-    def __lt__(self, other):
-        return self._circuit._data < self.__cast(other)
-
-    def __le__(self, other):
-        return self._circuit._data <= self.__cast(other)
-
-    def __eq__(self, other):
-        return self._circuit._data == self.__cast(other)
-
-    def __gt__(self, other):
-        return self._circuit._data > self.__cast(other)
-
-    def __ge__(self, other):
-        return self._circuit._data >= self.__cast(other)
-
-    def __add__(self, other):
-        return self._circuit._data + self.__cast(other)
-
-    def __radd__(self, other):
-        return self.__cast(other) + self._circuit._data
-
-    def __mul__(self, n):
-        return self._circuit._data * n
-
-    def __rmul__(self, n):
-        return n * self._circuit._data
-
-    def sort(self, *args, **kwargs):
-        """In-place stable sort. Accepts arguments of list.sort."""
-        self._circuit._data.sort(*args, **kwargs)
-
-    def copy(self):
-        """Returns a shallow copy of instruction list."""
-        return self._circuit._data.copy()
